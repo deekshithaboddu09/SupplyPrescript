@@ -1,0 +1,398 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SupplyPrescript | Portal Login</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .portal-card { transition: all 0.2s ease; }
+        .portal-card:hover {
+            transform: translateY(-4px);
+            border-color: #2563eb;
+            box-shadow: 0 12px 25px rgba(37, 99, 235, 0.10);
+        }
+    </style>
+</head>
+
+<body class="min-h-screen bg-slate-100 flex items-center justify-center p-5">
+
+<div class="w-full max-w-md bg-white rounded-2xl shadow-xl p-8">
+
+    <!-- BRAND -->
+    <div class="text-center mb-8">
+        <div class="inline-flex bg-blue-600 text-white p-3 rounded-xl mb-4">
+            <span class="text-2xl font-bold">SP</span>
+        </div>
+
+        <h1 class="text-2xl font-extrabold text-slate-900">
+            SupplyPrescript
+        </h1>
+
+        <p class="text-slate-500 text-sm mt-2">
+            Prescriptive Supply Chain Analytics
+        </p>
+    </div>
+
+    <!-- PORTAL SELECTION -->
+    <section id="portalSection">
+
+        <h2 class="text-xl font-bold text-slate-800 text-center mb-2">
+            Welcome!
+        </h2>
+
+        <p class="text-sm text-slate-500 text-center mb-6">
+            Select your portal to continue.
+        </p>
+
+        <div class="space-y-4">
+
+            <button type="button" onclick="selectPortal('admin')"
+                class="portal-card w-full border-2 border-slate-200 rounded-xl p-5 text-left flex items-center gap-4">
+
+                <div class="bg-blue-100 text-blue-700 p-3 rounded-xl">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30"
+                        viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 22s8-4 8-11V5l-8-3-8 3v6c0 7 8 11 8 11z"/>
+                        <path d="m9 12 2 2 4-4"/>
+                    </svg>
+                </div>
+
+                <div>
+                    <h3 class="font-bold text-slate-800 text-lg">Admin Portal</h3>
+                    <p class="text-sm text-slate-500">
+                        Manage users, approvals and shipments
+                    </p>
+                </div>
+            </button>
+
+            <button type="button" onclick="selectPortal('user')"
+                class="portal-card w-full border-2 border-slate-200 rounded-xl p-5 text-left flex items-center gap-4">
+
+                <div class="bg-indigo-100 text-indigo-700 p-3 rounded-xl">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30"
+                        viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="8" r="5"/>
+                        <path d="M20 21a8 8 0 0 0-16 0"/>
+                    </svg>
+                </div>
+
+                <div>
+                    <h3 class="font-bold text-slate-800 text-lg">User Portal</h3>
+                    <p class="text-sm text-slate-500">
+                        View shipments and AI recommendations
+                    </p>
+                </div>
+            </button>
+
+        </div>
+    </section>
+
+
+    <!-- LOGIN SECTION -->
+    <section id="loginSection" class="hidden">
+
+        <button type="button" onclick="goBack()"
+            class="text-sm text-blue-600 font-semibold mb-5 hover:underline">
+            ← Back to portal selection
+        </button>
+
+        <h2 id="loginHeading" class="text-xl font-bold text-slate-800 mb-2">
+            Sign In
+        </h2>
+
+        <p id="loginDescription" class="text-sm text-slate-500 mb-6">
+            Enter your credentials to continue.
+        </p>
+
+        <form id="loginForm" class="space-y-4">
+
+            <div>
+                <label class="block text-sm font-semibold mb-2">
+                    Email Address
+                </label>
+
+                <input id="loginEmail" type="email" required
+                    class="w-full border border-slate-300 rounded-lg p-3 outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Enter your email">
+            </div>
+
+            <div>
+                <label class="block text-sm font-semibold mb-2">
+                    Password
+                </label>
+
+                <input id="loginPassword" type="password" required
+                    class="w-full border border-slate-300 rounded-lg p-3 outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Enter your password">
+            </div>
+
+            <p id="loginMessage" class="text-sm hidden" role="alert"></p>
+
+            <button id="loginButton" type="submit"
+                class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-lg disabled:opacity-60">
+                Sign In
+            </button>
+
+        </form>
+
+        <p id="registerLink" class="text-center text-sm text-slate-500 mt-6 hidden">
+            Don't have an account?
+            <button type="button" onclick="showRegister()"
+                class="text-blue-600 font-semibold hover:underline">
+                Create Account
+            </button>
+        </p>
+
+    </section>
+
+
+    <!-- REGISTER SECTION -->
+    <section id="registerSection" class="hidden">
+
+        <button type="button" onclick="showLogin()"
+            class="text-sm text-blue-600 font-semibold mb-5 hover:underline">
+            ← Back to User Login
+        </button>
+
+        <h2 class="text-xl font-bold text-slate-800 mb-2">
+            Create Account
+        </h2>
+
+        <p class="text-sm text-slate-500 mb-6">
+            Register to access the User Portal.
+        </p>
+
+        <form id="registerForm" class="space-y-4">
+
+            <div>
+                <label class="block text-sm font-semibold mb-2">Full Name</label>
+                <input id="registerName" type="text" required
+                    class="w-full border border-slate-300 rounded-lg p-3 outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Enter your full name">
+            </div>
+
+            <div>
+                <label class="block text-sm font-semibold mb-2">Email Address</label>
+                <input id="registerEmail" type="email" required
+                    class="w-full border border-slate-300 rounded-lg p-3 outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Enter your email">
+            </div>
+
+            <div>
+                <label class="block text-sm font-semibold mb-2">Password</label>
+                <input id="registerPassword" type="password" required minlength="8"
+                    class="w-full border border-slate-300 rounded-lg p-3 outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Create a password">
+            </div>
+
+            <div>
+                <label class="block text-sm font-semibold mb-2">Confirm Password</label>
+                <input id="confirmPassword" type="password" required minlength="8"
+                    class="w-full border border-slate-300 rounded-lg p-3 outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Confirm your password">
+            </div>
+
+            <p id="registerMessage" class="text-sm hidden" role="alert"></p>
+
+            <button id="registerButton" type="submit"
+                class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-lg disabled:opacity-60">
+                Create Account
+            </button>
+
+        </form>
+
+        <p class="text-center text-sm text-slate-500 mt-6">
+            Already have an account?
+            <button type="button" onclick="showLogin()"
+                class="text-blue-600 font-semibold hover:underline">
+                Sign In
+            </button>
+        </p>
+
+    </section>
+
+    <p class="text-xs text-center text-slate-400 mt-7">
+        Secure access to your supply chain analytics portal.
+    </p>
+
+</div>
+
+
+<script>
+    const API_BASE = "http://127.0.0.1:8000/api";
+
+    let selectedPortal = null;
+
+    const portalSection = document.getElementById("portalSection");
+    const loginSection = document.getElementById("loginSection");
+    const registerSection = document.getElementById("registerSection");
+
+    function showMessage(element, message, success = false) {
+        element.textContent = message;
+        element.className = success
+            ? "text-sm text-green-600"
+            : "text-sm text-red-600";
+    }
+
+    function selectPortal(role) {
+        selectedPortal = role;
+
+        portalSection.classList.add("hidden");
+        registerSection.classList.add("hidden");
+        loginSection.classList.remove("hidden");
+
+        document.getElementById("loginHeading").textContent =
+            role === "admin" ? "Admin Sign In" : "User Sign In";
+
+        document.getElementById("loginDescription").textContent =
+            role === "admin"
+                ? "Sign in to manage your SupplyPrescript platform."
+                : "Sign in to access your SupplyPrescript account.";
+
+        document.getElementById("registerLink").classList.toggle(
+            "hidden", role !== "user"
+        );
+
+        document.getElementById("loginMessage").classList.add("hidden");
+        document.getElementById("loginForm").reset();
+    }
+
+    function goBack() {
+        selectedPortal = null;
+        loginSection.classList.add("hidden");
+        registerSection.classList.add("hidden");
+        portalSection.classList.remove("hidden");
+    }
+
+    function showRegister() {
+        if (selectedPortal !== "user") return;
+
+        loginSection.classList.add("hidden");
+        registerSection.classList.remove("hidden");
+        document.getElementById("registerMessage").classList.add("hidden");
+    }
+
+    function showLogin() {
+        registerSection.classList.add("hidden");
+        loginSection.classList.remove("hidden");
+        document.getElementById("registerMessage").classList.add("hidden");
+    }
+
+
+    // LOGIN
+    document.getElementById("loginForm").addEventListener("submit", async (event) => {
+        event.preventDefault();
+
+        const button = document.getElementById("loginButton");
+        const message = document.getElementById("loginMessage");
+
+        message.classList.add("hidden");
+        button.disabled = true;
+        button.textContent = "Signing in...";
+
+        try {
+            const response = await fetch(`${API_BASE}/auth/login`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    email: document.getElementById("loginEmail").value.trim(),
+                    password: document.getElementById("loginPassword").value
+                })
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.detail || "Login failed");
+            }
+
+            // Verify selected portal against the actual account role.
+            if (data.user.role !== selectedPortal) {
+                throw new Error(
+                    `This account is not an ${selectedPortal === "admin" ? "Admin" : "User"} account. Please select the correct portal.`
+                );
+            }
+
+            localStorage.setItem("sp_access_token", data.access_token);
+            localStorage.setItem("sp_user", JSON.stringify(data.user));
+
+            if (data.user.role === "admin") {
+                window.location.href = "admin.html";
+            } else {
+                window.location.href = "index.html";
+            }
+
+        } catch (error) {
+            showMessage(message, error.message);
+        } finally {
+            button.disabled = false;
+            button.textContent = "Sign In";
+        }
+    });
+
+
+    // REGISTRATION
+    document.getElementById("registerForm").addEventListener("submit", async (event) => {
+        event.preventDefault();
+
+        const button = document.getElementById("registerButton");
+        const message = document.getElementById("registerMessage");
+
+        const name = document.getElementById("registerName").value.trim();
+        const email = document.getElementById("registerEmail").value.trim();
+        const password = document.getElementById("registerPassword").value;
+        const confirmPassword = document.getElementById("confirmPassword").value;
+
+        message.classList.add("hidden");
+
+        if (password !== confirmPassword) {
+            showMessage(message, "Passwords do not match.");
+            return;
+        }
+
+        button.disabled = true;
+        button.textContent = "Creating account...";
+
+        try {
+            const response = await fetch(`${API_BASE}/auth/register`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ name, email, password })
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.detail || "Registration failed");
+            }
+
+            document.getElementById("registerForm").reset();
+            document.getElementById("loginEmail").value = email;
+
+            showLogin();
+
+            showMessage(
+                document.getElementById("loginMessage"),
+                data.message || "Registration submitted! Your account is waiting for Admin approval.",
+                true
+            );
+
+        } catch (error) {
+            showMessage(message, error.message);
+        } finally {
+            button.disabled = false;
+            button.textContent = "Create Account";
+        }
+    });
+</script>
+
+</body>
+</html>

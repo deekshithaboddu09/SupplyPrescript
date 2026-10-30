@@ -5,3 +5,12 @@ venv/
 .env
 .pytest_cache/
 .DS_Store
+.env
+.env.*
+!.env.example
+
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+backend/database/*.db

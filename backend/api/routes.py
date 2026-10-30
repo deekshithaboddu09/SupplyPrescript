@@ -18,7 +18,7 @@ def load_shipments():
     if not DATA_FILE.exists():
         return SEED_SHIPMENTS
     try:
-        with DATA_FILE.open(newline="", encoding="utf-8") as file:
+        with DATA_FILE.open(newline="", encoding="utf-8-sig") as file:
             rows = list(csv.DictReader(file))
 
         for row in rows:

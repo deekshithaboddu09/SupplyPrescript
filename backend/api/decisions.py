@@ -6,7 +6,11 @@ router = APIRouter(tags=["decisions"])
 
 @router.post("/decisions/evaluate")
 def evaluate_decision(request: DecisionRequest):
-    results = evaluate_options(request.penalty, request.current_delay_days, request.options)
+    results = evaluate_options(
+        request.penalty,
+        request.current_delay_days,
+        request.options
+    )
     return {
         "shipment_id": request.shipment_id,
         "method": "linear_delay_penalty_demo_rule",

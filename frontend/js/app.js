@@ -2,6 +2,76 @@
 // SupplyPrescript frontend controller extracted from the reference UI.
 // Shipment data is loaded from the SupplyPrescript backend API. Decision evaluation remains client-side in this version.
 // --- 1. SEED DATA & SYNTHETIC DATA GENERATOR ---
+// --- USER AUTHENTICATION ---
+
+const API_BASE_URL = "http://127.0.0.1:8000/api";
+
+window.logoutUser = function () {
+    localStorage.removeItem("sp_access_token");
+    localStorage.removeItem("sp_user");
+
+    window.location.href = "login.html";
+}
+
+async function validateUserSession() {
+    const token = localStorage.getItem("sp_access_token");
+    const savedUser = localStorage.getItem("sp_user");
+
+    if (!token || !savedUser) {
+        window.location.replace("login.html");
+        return false;
+    }
+
+    let user;
+
+    try {
+        user = JSON.parse(savedUser);
+    } catch (error) {
+        logoutUser();
+        return false;
+    }
+
+    if (user.role === "admin") {
+        window.location.replace("admin.html");
+        return false;
+    }
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/user/me`, {
+            headers: {
+                "Authorization": `Bearer ${token}`
+            }
+        });
+
+        if (!response.ok) {
+            logoutUser();
+            return false;
+        }
+
+        const currentUser = await response.json();
+        const displayUser = currentUser.user || currentUser;
+
+        const nameElement = document.getElementById("userDisplayName");
+
+        if (nameElement) {
+            nameElement.textContent = displayUser.name || user.name || "User";
+        }
+
+        return true;
+
+    } catch (error) {
+        console.error("Session validation failed:", error);
+        alert("Unable to verify your login. Please check the backend.");
+        return false;
+    }
+}
+
+// Protect dashboard when navigating back after logout
+window.addEventListener("pageshow", function (event) {
+    if (event.persisted && !localStorage.getItem("sp_access_token")) {
+        window.location.replace("login.html");
+    }
+});
         const DETAILED_SAMPLE_SHIPMENTS = [
             { 
                 id: 'SHP-4092', 
@@ -688,9 +758,15 @@
         }
 
        window.onload = async function () {
-    if (window.lucide) {
-        lucide.createIcons();
-    }
+
+            const isAuthenticated = await validateUserSession();
+
+            if (!isAuthenticated) {
+                return;
+            }
+            if (window.lucide) {
+                lucide.createIcons();
+           }
 
     try {
         const response = await fetch(
