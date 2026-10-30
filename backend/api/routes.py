@@ -3,7 +3,7 @@ from pathlib import Path
 from fastapi import APIRouter, HTTPException, Query
 
 router = APIRouter(tags=["shipments"])
-DATA_FILE = Path(__file__).resolve().parents[2] / ".." / "data" / "raw" / "shipments.csv"
+DATA_FILE = Path(__file__).resolve().parents[2] / "data" / "raw" / "shipments.csv"
 
 # Keep a reliable small seed set so the API runs even before CSV data is added.
 SEED_SHIPMENTS = [
@@ -19,8 +19,17 @@ def load_shipments():
         return SEED_SHIPMENTS
     try:
         with DATA_FILE.open(newline="", encoding="utf-8") as file:
-            return list(csv.DictReader(file))
-    except (OSError, csv.Error):
+            rows = list(csv.DictReader(file))
+
+        for row in rows:
+            row["delay_days"] = float(row["delay_days"])
+            row["penalty"] = float(row["penalty"])
+
+        return rows
+    except (OSError, csv.Error, ValueError, KeyError) as error:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Invalid shipment dataset: {error}")
         return SEED_SHIPMENTS
 
 @router.get("/shipments")
