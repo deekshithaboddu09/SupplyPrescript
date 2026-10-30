@@ -1,5 +1,6 @@
+
 // SupplyPrescript frontend controller extracted from the reference UI.
-// Decision evaluation in this UI is currently client-side; backend API integration is a separate next step.
+// Shipment data is loaded from the SupplyPrescript backend API. Decision evaluation remains client-side in this version.
 // --- 1. SEED DATA & SYNTHETIC DATA GENERATOR ---
         const DETAILED_SAMPLE_SHIPMENTS = [
             { 
@@ -158,16 +159,23 @@
         function loadSavedLogs() {
             try {
                 const saved = localStorage.getItem('supplyprescript_decisions');
-                if (saved) return JSON.parse(saved);
-            } catch(e) { console.error('LocalStorage read error:', e); }
-            return [
-                { timestamp: '2026-10-24 14:32', po: 'SHP-9021 (Sensor Units)', action: 'Option A: Air Freight Expedite', cost: '+$18,500', savings: '$110,000', rawCost: 18500, rawSavings: 110000, status: 'Approved & Logged' },
-                { timestamp: '2026-10-22 09:15', po: 'SHP-3310 (Cables)', action: 'Option B: Secondary Supplier', cost: '+$9,200', savings: '$64,000', rawCost: 9200, rawSavings: 64000, status: 'Approved & Logged' }
-            ];
+                if (saved) {
+                    const parsed = JSON.parse(saved);
+                    return Array.isArray(parsed) ? parsed : [];
+                }
+            } catch (e) {
+                console.error('LocalStorage read error:', e);
+            }
+            // Start with an empty history; only decisions made in this browser are shown.
+            return [];
         }
 
         function getShipmentsDataset() {
-            return generateExpandedShipmentsDataset(142);
+            // Offline fallback: use only the five explicit sample shipments, not 142 generated demo rows.
+            return DETAILED_SAMPLE_SHIPMENTS.map(shipment => ({
+                ...shipment,
+                options: (shipment.options || []).map(option => ({ ...option }))
+            }));
         }
 
         const state = {
@@ -634,64 +642,47 @@
         function initAnalyticsCharts() {
             const canvas1 = document.getElementById('roiChart');
             const canvas2 = document.getElementById('disruptionChart');
-            if (!canvas1 || !canvas2) return;
+            if (!canvas1 || !canvas2 || typeof Chart === 'undefined') return;
 
             if (roiChartInstance) roiChartInstance.destroy();
             if (disruptionChartInstance) disruptionChartInstance.destroy();
 
-            const totalCost = state.decisionLogs.reduce((sum, item) => sum + (item.rawCost || 0), 0);
-            const totalSaved = state.decisionLogs.reduce((sum, item) => sum + (item.rawSavings || 0), 0);
+            const totalCost = state.decisionLogs.reduce((sum, item) => sum + (Number(item.rawCost) || 0), 0);
+            const totalSaved = state.decisionLogs.reduce((sum, item) => sum + (Number(item.rawSavings) || 0), 0);
 
-            const ctx1 = canvas1.getContext('2d');
-            roiChartInstance = new Chart(ctx1, {
+            roiChartInstance = new Chart(canvas1.getContext('2d'), {
                 type: 'bar',
                 data: {
-                    labels: ['Historical Q3', 'Historical Q4', 'Active Log Total'],
+                    labels: ['Recorded decisions'],
                     datasets: [
-                        {
-                            label: 'Intervention Cost ($)',
-                            data: [15000, 28000, totalCost],
-                            backgroundColor: '#94a3b8',
-                            borderRadius: 6
-                        },
-                        {
-                            label: 'Penalties Avoided ($)',
-                            data: [110000, 190000, totalSaved],
-                            backgroundColor: '#2563eb',
-                            borderRadius: 6
-                        }
+                        { label: 'Intervention Cost ($)', data: [totalCost], backgroundColor: '#94a3b8', borderRadius: 6 },
+                        { label: 'Estimated Benefit ($)', data: [totalSaved], backgroundColor: '#2563eb', borderRadius: 6 }
                     ]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: {
-                        legend: { labels: { color: '#475569', font: { family: 'Inter', size: 11 } } }
-                    },
+                    plugins: { legend: { labels: { color: '#475569', font: { family: 'Inter', size: 11 } } } },
                     scales: {
                         x: { ticks: { color: '#64748b' }, grid: { color: '#f1f5f9' } },
-                        y: { ticks: { color: '#64748b' }, grid: { color: '#f1f5f9' } }
+                        y: { beginAtZero: true, ticks: { color: '#64748b' }, grid: { color: '#f1f5f9' } }
                     }
                 }
             });
 
-            const ctx2 = canvas2.getContext('2d');
-            disruptionChartInstance = new Chart(ctx2, {
+            const counts = ['CRITICAL', 'MODERATE', 'NORMAL'].map(status =>
+                state.shipments.filter(shipment => shipment.status === status).length
+            );
+            disruptionChartInstance = new Chart(canvas2.getContext('2d'), {
                 type: 'doughnut',
                 data: {
-                    labels: ['Port Congestion', 'Air Capacity Shortage', 'Customs Holds', 'Supplier Backlog'],
-                    datasets: [{
-                        data: [45, 25, 20, 10],
-                        backgroundColor: ['#2563eb', '#3b82f6', '#f59e0b', '#e11d48'],
-                        borderWidth: 0
-                    }]
+                    labels: ['Critical', 'Moderate', 'Normal'],
+                    datasets: [{ data: counts, backgroundColor: ['#e11d48', '#f59e0b', '#2563eb'], borderWidth: 0 }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: {
-                        legend: { position: 'right', labels: { color: '#475569', font: { family: 'Inter', size: 11 } } }
-                    }
+                    plugins: { legend: { position: 'right', labels: { color: '#475569', font: { family: 'Inter', size: 11 } } } }
                 }
             });
         }
@@ -714,7 +705,7 @@
 
         const existingShipments = getShipmentsDataset();
 
-        state.shipments = result.items.map((item) => {
+        state.shipments = (Array.isArray(result.items) ? result.items : []).map((item) => {
             const existing = existingShipments.find(
                 (shipment) => shipment.id === item.id
             ) || {};
