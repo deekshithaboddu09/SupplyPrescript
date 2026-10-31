@@ -1,0 +1,214 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Account Settings | SupplyPrescript</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+
+<body class="bg-slate-50 min-h-screen text-slate-800">
+
+    <!-- Header -->
+    <header class="bg-white border-b border-slate-200 px-5 py-3">
+        <div class="max-w-5xl mx-auto flex justify-between items-center">
+            <div>
+                <h1 class="text-lg font-bold">SupplyPrescript</h1>
+                <p class="text-xs text-slate-500">Account Settings</p>
+            </div>
+
+            <button onclick="goToDashboard()"
+                class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-xs font-semibold">
+                Back to Dashboard
+            </button>
+        </div>
+    </header>
+
+    <main class="max-w-5xl mx-auto px-5 py-5">
+
+        <!-- Page Heading -->
+        <div class="mb-5">
+            <h2 class="text-xl font-bold">My Account</h2>
+            <p class="text-slate-500 text-xs mt-1">
+                Manage your personal information and account details.
+            </p>
+        </div>
+
+        <!-- Profile Card -->
+        <section class="bg-white rounded-xl border border-slate-200 p-4 mb-4">
+            <div class="flex items-center gap-3">
+                <div class="w-12 h-12 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center">
+                    <i data-lucide="user-round" class="w-6 h-6"></i>
+                </div>
+
+                <div>
+                    <h3 id="profileName" class="text-base font-bold">Loading...</h3>
+                    <p id="profileEmail" class="text-xs text-slate-500 mt-0.5">Loading account details...</p>
+                    <span id="profileStatus"
+                        class="inline-block mt-1.5 text-[10px] font-semibold px-2.5 py-1 rounded-full bg-slate-100">
+                        Loading
+                    </span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Account Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
+
+            <!-- Personal Information -->
+            <section class="bg-white rounded-xl border border-slate-200 p-5">
+                <div class="flex items-center gap-2.5 mb-4">
+                    <i data-lucide="user" class="w-5 h-5 text-blue-600"></i>
+                    <h3 class="font-bold text-base">Personal Information</h3>
+                </div>
+
+                <div class="space-y-3">
+                    <div>
+                        <p class="text-[11px] text-slate-500 mb-0.5">Full Name</p>
+                        <p id="infoName" class="text-sm font-semibold">—</p>
+                    </div>
+
+                    <div>
+                        <p class="text-[11px] text-slate-500 mb-0.5">Email Address</p>
+                        <p id="infoEmail" class="text-sm font-semibold break-all">—</p>
+                    </div>
+
+                    <div>
+                        <p class="text-[11px] text-slate-500 mb-0.5">User ID</p>
+                        <p id="infoId" class="text-sm font-semibold">—</p>
+                    </div>
+
+                    <div>
+                        <p class="text-[11px] text-slate-500 mb-0.5">Account Role</p>
+                        <p id="infoRole" class="text-sm font-semibold">User</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- My Workspace -->
+            <section class="bg-white rounded-xl border border-slate-200 p-5">
+                <div class="flex items-center gap-2.5 mb-3">
+                    <i data-lucide="briefcase-business" class="w-5 h-5 text-blue-600"></i>
+                    <h3 class="font-bold text-base">My Workspace</h3>
+                </div>
+
+                <p class="text-xs text-slate-500 leading-5">
+                    Access your shipment activities, recommendations and submitted decisions from your personal workspace.
+                </p>
+
+                <button onclick="goToDashboard()"
+                    class="mt-3 text-blue-600 text-xs font-semibold hover:underline">
+                    Open Dashboard →
+                </button>
+            </section>
+
+            <!-- Account & Security -->
+            <section class="bg-white rounded-xl border border-slate-200 p-5">
+                <div class="flex items-center gap-2.5 mb-3">
+                    <i data-lucide="shield-check" class="w-5 h-5 text-blue-600"></i>
+                    <h3 class="font-bold text-base">Account & Security</h3>
+                </div>
+
+                <p class="text-xs text-slate-500 leading-5">
+                    Your account is protected through secure authentication.
+                </p>
+
+                <p class="text-[11px] text-slate-400 mt-2">
+                    Password change feature — Coming Soon
+                </p>
+            </section>
+
+            <!-- Notifications -->
+            <section class="bg-white rounded-xl border border-slate-200 p-5">
+                <div class="flex items-center gap-2.5 mb-3">
+                    <i data-lucide="bell" class="w-5 h-5 text-blue-600"></i>
+                    <h3 class="font-bold text-base">Notifications</h3>
+                </div>
+
+                <p class="text-xs text-slate-500 leading-5">
+                    Account approval updates and decision review notifications will appear here when notification functionality is added.
+                </p>
+            </section>
+
+        </div>
+
+        <!-- Logout -->
+        <div class="mt-5 flex justify-end">
+            <button onclick="logoutUser()"
+                class="flex items-center gap-2 text-red-600 font-semibold text-xs px-4 py-2 rounded-lg hover:bg-red-50">
+                <i data-lucide="log-out" class="w-4 h-4"></i>
+                Logout
+            </button>
+        </div>
+
+    </main>
+
+    <script>
+        const API_BASE_URL = "http://127.0.0.1:8000/api";
+
+        function logoutUser() {
+            localStorage.removeItem("sp_access_token");
+            localStorage.removeItem("sp_user");
+            window.location.replace("login.html");
+        }
+
+        function goToDashboard() {
+            window.location.href = "index.html";
+        }
+
+        async function loadAccountDetails() {
+            const token = localStorage.getItem("sp_access_token");
+            const savedUser = localStorage.getItem("sp_user");
+
+            if (!token || !savedUser) {
+                window.location.replace("login.html");
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/user/me`, {
+                    headers: {
+                        "Authorization": `Bearer ${token}`
+                    }
+                });
+
+                if (!response.ok) {
+                    logoutUser();
+                    return;
+                }
+
+                const result = await response.json();
+                const user = result.user || result;
+
+                const name = user.name || "User";
+                const email = user.email || "Not available";
+                const id = user.id ?? "Not available";
+                const role = user.role || "user";
+                const status = user.status || "Unknown";
+
+                document.getElementById("profileName").textContent = name;
+                document.getElementById("profileEmail").textContent = email;
+                document.getElementById("infoName").textContent = name;
+                document.getElementById("infoEmail").textContent = email;
+                document.getElementById("infoId").textContent = id;
+                document.getElementById("infoRole").textContent = role;
+                document.getElementById("profileStatus").textContent = status;
+
+            } catch (error) {
+                console.error("Account loading failed:", error);
+
+                document.getElementById("profileName").textContent =
+                    "Unable to load account";
+                document.getElementById("profileEmail").textContent =
+                    "Please check your backend connection.";
+            }
+        }
+
+        loadAccountDetails();
+        lucide.createIcons();
+    </script>
+
+</body>
+</html>
