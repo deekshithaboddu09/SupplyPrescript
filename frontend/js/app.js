@@ -51,11 +51,18 @@ async function validateUserSession() {
         const currentUser = await response.json();
         const displayUser = currentUser.user || currentUser;
 
+        const actualName = displayUser.name || user.name || "User";
+
         const nameElement = document.getElementById("userDisplayName");
+        const dropdownNameElement = document.getElementById("profileDropdownName");
 
         if (nameElement) {
-            nameElement.textContent = displayUser.name || user.name || "User";
+            nameElement.textContent = actualName;
         }
+
+        if (dropdownNameElement) {
+            dropdownNameElement.textContent = actualName;
+       }
 
         return true;
 
