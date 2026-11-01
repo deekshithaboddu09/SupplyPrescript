@@ -173,32 +173,66 @@
             </section>
 
             <!-- Other sections -->
+            
             <section id="decisions" class="dashboard-section hidden">
-                <h2 class="text-2xl font-bold mb-3">Decision Approvals</h2>
-                <div class="bg-white p-6 rounded-xl border border-slate-200">
-                    <p class="text-slate-500">
-                        Decision approval workflow will be connected in the next development step.
-                    </p>
-                </div>
-            </section>
 
-            <section id="shipments" class="dashboard-section hidden">
-                <h2 class="text-2xl font-bold mb-3">Shipment Management</h2>
-                <div class="bg-white p-6 rounded-xl border border-slate-200">
-                    <p class="text-slate-500">
-                        Shipment management will be connected to your existing shipment APIs.
-                    </p>
-                </div>
-            </section>
+    <div class="flex flex-wrap justify-between items-center gap-3 mb-6">
+        <div>
+            <h2 class="text-2xl font-bold text-slate-900">
+                Decision Approvals
+            </h2>
+            <p class="text-sm text-slate-500 mt-1">
+                Review and approve or reject user-submitted decisions.
+            </p>
+        </div>
 
-            <section id="analytics" class="dashboard-section hidden">
-                <h2 class="text-2xl font-bold mb-3">Analytics</h2>
-                <div class="bg-white p-6 rounded-xl border border-slate-200">
-                    <p class="text-slate-500">
-                        Admin analytics will be integrated in a later step.
-                    </p>
-                </div>
-            </section>
+        <button onclick="loadPendingDecisions()"
+            class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">
+            Refresh
+        </button>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+
+        <div class="p-5 border-b border-slate-200">
+            <h3 class="font-bold">Pending Decisions</h3>
+            <p class="text-sm text-slate-500 mt-1">
+                Pending: <span id="pendingDecisionCount">0</span>
+            </p>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm text-left">
+                <thead class="bg-slate-50 text-slate-600">
+                    <tr>
+                        <th class="p-4">Decision ID</th>
+                        <th class="p-4">User</th>
+                        <th class="p-4">Shipment</th>
+                        <th class="p-4">Selected Action</th>
+                        <th class="p-4">Extra Cost</th>
+                        <th class="p-4">Net Benefit</th>
+                        <th class="p-4">Submitted</th>
+                        <th class="p-4">Actions</th>
+                    </tr>
+                </thead>
+
+                <tbody id="decisionsTable">
+                    <tr>
+                        <td colspan="8" class="p-6 text-center text-slate-500">
+                            Loading pending decisions...
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div id="decisionEmptyMessage"
+            class="hidden p-8 text-center text-slate-500">
+            No pending decisions found.
+        </div>
+
+    </div>
+</section>
 
             <section id="audit" class="dashboard-section hidden">
                 <h2 class="text-2xl font-bold mb-3">Audit Logs</h2>
@@ -280,6 +314,7 @@ function showSection(sectionId, button) {
     if (button) button.classList.add("active");
 
     if (sectionId === "users") loadPendingUsers();
+    if (sectionId === "decisions") loadPendingDecisions();
 }
 
 async function loadPendingUsers() {
@@ -377,6 +412,135 @@ async function reviewUser(userId, action) {
 
         alert(`User #${userId} ${action}d successfully.`);
         await loadPendingUsers();
+
+    } catch (error) {
+        alert(error.message);
+    }
+}
+// Load decisions waiting for Admin approval.
+async function loadPendingDecisions() {
+    const table = document.getElementById("decisionsTable");
+    const empty = document.getElementById("decisionEmptyMessage");
+    const count = document.getElementById("pendingDecisionCount");
+
+    table.innerHTML = `
+        <tr>
+            <td colspan="8" class="p-6 text-center text-slate-500">
+                Loading pending decisions...
+            </td>
+        </tr>`;
+
+    empty.classList.add("hidden");
+
+    try {
+        const data = await apiRequest("/admin/decisions/pending");
+
+        count.textContent = data.count;
+        table.innerHTML = "";
+
+        if (!data.items || data.items.length === 0) {
+            empty.classList.remove("hidden");
+            return;
+        }
+
+        data.items.forEach(decision => {
+            const row = document.createElement("tr");
+            row.className = "border-t border-slate-100";
+
+            const values = [
+                decision.id,
+                decision.user_name || decision.user_email || decision.user_id,
+                decision.shipment_id,
+                decision.option_name,
+                "$" + Number(decision.cost).toLocaleString(),
+                "$" + Number(decision.net_benefit).toLocaleString(),
+                decision.submitted_at || "—"
+            ];
+
+            values.forEach(value => {
+                const cell = document.createElement("td");
+                cell.className = "p-4 text-slate-700 whitespace-nowrap";
+                cell.textContent = value;
+                row.appendChild(cell);
+            });
+
+            const actions = document.createElement("td");
+            actions.className = "p-4 whitespace-nowrap";
+
+            const approve = document.createElement("button");
+            approve.textContent = "Approve";
+            approve.className =
+                "bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-md mr-2 mb-1";
+
+            approve.addEventListener("click", () => {
+                reviewDecision(decision.id, "approve");
+            });
+
+            const reject = document.createElement("button");
+            reject.textContent = "Reject";
+            reject.className =
+                "bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-md mb-1";
+
+            reject.addEventListener("click", () => {
+                reviewDecision(decision.id, "reject");
+            });
+
+            actions.append(approve, reject);
+            row.appendChild(actions);
+            table.appendChild(row);
+        });
+
+    } catch (error) {
+        table.innerHTML = "";
+        const row = document.createElement("tr");
+        const cell = document.createElement("td");
+
+        cell.colSpan = 8;
+        cell.className = "p-6 text-center text-red-600";
+        cell.textContent = error.message;
+
+        row.appendChild(cell);
+        table.appendChild(row);
+    }
+}
+
+
+// Admin reviews a submitted decision.
+async function reviewDecision(decisionId, action) {
+    let note = null;
+
+    if (action === "reject") {
+        note = prompt("Enter reason for rejecting this decision:");
+
+        if (note === null) return;
+
+        if (!note.trim()) {
+            alert("Please enter a rejection reason.");
+            return;
+        }
+    }
+
+    if (!confirm(`Are you sure you want to ${action} Decision #${decisionId}?`)) {
+        return;
+    }
+
+    try {
+        const options = {
+            method: "POST"
+        };
+
+        if (action === "reject") {
+            options.body = JSON.stringify({ note });
+        }
+
+        await apiRequest(
+            `/admin/decisions/${decisionId}/${action}`,
+            options
+        );
+
+        alert(`Decision #${decisionId} ${action}d successfully!`);
+
+        await loadPendingDecisions();
 
     } catch (error) {
         alert(error.message);

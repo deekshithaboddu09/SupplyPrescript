@@ -1,10 +1,40 @@
 
+
 // SupplyPrescript frontend controller extracted from the reference UI.
 // Shipment data is loaded from the SupplyPrescript backend API. Decision evaluation remains client-side in this version.
 // --- 1. SEED DATA & SYNTHETIC DATA GENERATOR ---
 // --- USER AUTHENTICATION ---
 
 const API_BASE_URL = "http://127.0.0.1:8000/api";
+
+async function spApiRequest(endpoint, options = {}) {
+    const token = localStorage.getItem("sp_access_token");
+
+    const headers = {
+        ...(options.headers || {})
+    };
+
+    if (token) {
+        headers["Authorization"] = `Bearer ${token}`;
+    }
+
+    if (options.body) {
+        headers["Content-Type"] = "application/json";
+    }
+
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+        ...options,
+        headers
+    });
+
+    const data = await response.json().catch(() => ({}));
+
+    if (!response.ok) {
+        throw new Error(data.detail || "API request failed");
+    }
+
+    return data;
+}
 
 window.logoutUser = function () {
     localStorage.removeItem("sp_access_token");
@@ -356,7 +386,7 @@ window.addEventListener("pageshow", function (event) {
                     </div>
                     <p class="text-[11px] text-slate-600 border-t border-slate-200/80 pt-2">${optNote}</p>
                     ${target.status !== 'NORMAL' ? `
-                        <button onclick="promptDecisionConfirm('${optName.replace(/'/g, "\\'")}', '${target.name.replace(/'/g, "\\'")} (${target.id})', ${optCost}, '${evalMath.formattedBenefit}')" 
+                        <button onclick="promptDecisionConfirm('${optName.replace(/'/g, "\\'")}', '${target.name.replace(/'/g, "\\'")} (${target.id})', ${optCost}, '${evalMath.formattedBenefit}', '${target.id}', '${opt.id || `opt-${idx + 1}`}', ${Number(target.penalty) || 0}, ${Number(target.delayDays) || 0}, ${optDelay})"
                             class="w-full mt-2 py-1.5 ${isRec ? 'bg-blue-600 hover:bg-blue-700 text-white font-bold' : 'bg-slate-200 hover:bg-slate-300 text-slate-800 font-semibold'} rounded-lg text-xs transition-colors shadow-xs">
                             Select Action
                         </button>
@@ -485,7 +515,7 @@ window.addEventListener("pageshow", function (event) {
                         </div>
                     </div>
 
-                    <button onclick="promptDecisionConfirm('${nameA.replace(/'/g, "\\'")}', '${(target.name || '').replace(/'/g, "\\'")} (${target.id || ''})', ${costA}, '${evalA.formattedBenefit}')" 
+                    <button onclick="promptDecisionConfirm('${nameA.replace(/'/g, "\\'")}', '${(target.name || '').replace(/'/g, "\\'")} (${target.id || ''})', ${costA}, '${evalA.formattedBenefit}', '${target.id}', '${optA.id || 'opt-a'}', ${Number(target.penalty) || 0}, ${Number(target.delayDays) || 0}, ${Number(optA.delayDays) || 0})" 
                         class="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-lg transition-colors shadow-sm">
                         Select Option A
                     </button>
@@ -511,7 +541,7 @@ window.addEventListener("pageshow", function (event) {
                         </div>
                     </div>
 
-                    <button onclick="promptDecisionConfirm('${nameB.replace(/'/g, "\\'")}', '${(target.name || '').replace(/'/g, "\\'")} (${target.id || ''})', ${costB}, '${evalB.formattedBenefit}')" 
+                    <button onclick="promptDecisionConfirm('${nameB.replace(/'/g, "\\'")}', '${(target.name || '').replace(/'/g, "\\'")} (${target.id || ''})', ${costB}, '${evalB.formattedBenefit}', '${target.id}', '${optB.id || 'opt-b'}', ${Number(target.penalty) || 0}, ${Number(target.delayDays) || 0}, ${Number(optB.delayDays) || 0})" 
                         class="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs rounded-lg border border-slate-300 transition-colors">
                         Select Option B
                     </button>
@@ -537,7 +567,7 @@ window.addEventListener("pageshow", function (event) {
                         </div>
                     </div>
 
-                    <button onclick="promptDecisionConfirm('${nameC.replace(/'/g, "\\'")}', '${(target.name || '').replace(/'/g, "\\'")} (${target.id || ''})', 0, '${evalC.formattedBenefit}')" 
+                    <button onclick="promptDecisionConfirm('${nameC.replace(/'/g, "\\'")}', '${(target.name || '').replace(/'/g, "\\'")} (${target.id || ''})', ${costC}, '${evalC.formattedBenefit}', '${target.id}', '${optC.id || 'opt-c'}', ${Number(target.penalty) || 0}, ${Number(target.delayDays) || 0}, ${Number(optC.delayDays) || 0})" 
                         class="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-500 font-semibold text-xs rounded-lg border border-slate-200 transition-colors">
                         Select Option C
                     </button>
@@ -545,24 +575,66 @@ window.addEventListener("pageshow", function (event) {
             `;
         }
 
-        function promptDecisionConfirm(actionTitle, shipmentName, cost, savings) {
-            state.pendingExecution = { actionTitle, shipmentName, cost, savings };
+        function promptDecisionConfirm(
+            actionTitle,
+            shipmentName,
+            cost,
+            savings,
+            shipmentId,
+            optionId,
+            penalty,
+            currentDelayDays,
+            optionDelayDays
+        ) {
+            state.pendingExecution = {
+                actionTitle,
+                shipmentName,
+                cost: Number(cost) || 0,
+                savings,
+                shipmentId,
+                optionId,
+                penalty: Number(penalty) || 0,
+                currentDelayDays: Number(currentDelayDays) || 0,
+                optionDelayDays: Number(optionDelayDays) || 0
+            };
 
             const detailsElem = document.getElementById('confirmModalDetails');
             if (detailsElem) {
                 detailsElem.innerHTML = `
                     <div><span class="text-slate-400">Shipment:</span> ${shipmentName}</div>
                     <div><span class="text-slate-400">Selected Action:</span> ${actionTitle}</div>
-                    <div><span class="text-slate-400">Extra Cost:</span> $${cost.toLocaleString()}</div>
-                    <div><span class="text-slate-400">Estimated Net Benefit:</span> <span class="text-emerald-600 font-bold">${savings}</span></div>
+                    <div><span class="text-slate-400">Extra Cost:</span> $${Number(cost).toLocaleString()}</div>
+                    <div><span class="text-slate-400">Estimated Net Benefit:</span>
+                        <span class="text-emerald-600 font-bold">${savings}</span>
+                    </div>
+                    <div class="text-amber-600 font-semibold mt-2">
+                        This decision will be submitted for Admin approval.
+                    </div>
                 `;
             }
 
-            const btn = document.getElementById('confirmExecuteBtn');
-            if (btn) btn.onclick = executeConfirmedDecision;
-            
             const modal = document.getElementById('decisionConfirmModal');
-            if (modal) modal.classList.remove('hidden');
+            const btn = document.getElementById('confirmExecuteBtn');
+            if (btn) {
+                btn.disabled = false;
+                btn.textContent = 'Confirm & Submit';
+                btn.onclick = executeConfirmedDecision;
+            }
+
+            // Update the existing static modal copy without changing its layout.
+            if (modal) {
+                modal.querySelectorAll('*').forEach(element => {
+                    if (element.children.length === 0) {
+                        const text = (element.textContent || '').trim();
+                        if (text.includes('committed to the audit trail log')) {
+                            element.textContent = 'Your decision will be submitted for Admin approval.';
+                        } else if (text.includes('execute and log this prescriptive recommendation')) {
+                            element.textContent = 'Are you sure you want to submit this decision for Admin approval?';
+                        }
+                    }
+                });
+                modal.classList.remove('hidden');
+            }
         }
 
         function closeConfirmModal() {
@@ -570,33 +642,50 @@ window.addEventListener("pageshow", function (event) {
             if (modal) modal.classList.add('hidden');
         }
 
-        function executeConfirmedDecision() {
-            closeConfirmModal();
-            closeShipmentModal();
+        async function executeConfirmedDecision() {
             const p = state.pendingExecution;
-            if(!p) return;
+            if (!p) return;
 
-            const now = new Date();
-            const timestamp = now.toISOString().replace('T', ' ').substring(0, 16);
+            const btn = document.getElementById('confirmExecuteBtn');
+            try {
+                if (btn) {
+                    btn.disabled = true;
+                    btn.textContent = 'Submitting...';
+                }
 
-            const numericCost = typeof p.cost === 'number' ? p.cost : parseInt(String(p.cost).replace(/[^0-9]/g, '')) || 0;
-            const numericSavings = parseInt(String(p.savings).replace(/[^0-9]/g, '')) || 0;
+                const payload = {
+                    shipment_id: p.shipmentId,
+                    penalty: Number(p.penalty),
+                    current_delay_days: Number(p.currentDelayDays),
+                    selected_option: {
+                        id: p.optionId,
+                        name: p.actionTitle,
+                        cost: Number(p.cost),
+                        delay_days: Number(p.optionDelayDays)
+                    }
+                };
 
-            state.decisionLogs.unshift({
-                timestamp: timestamp,
-                po: p.shipmentName,
-                action: p.actionTitle,
-                cost: p.cost === 0 ? '$0' : `+$${numericCost.toLocaleString()}`,
-                savings: p.savings,
-                rawCost: numericCost,
-                rawSavings: numericSavings,
-                status: 'Approved & Committed'
-            });
+                await spApiRequest('/decisions/submit', {
+                    method: 'POST',
+                    body: JSON.stringify(payload)
+                });
 
-            saveLogsToStorage();
-            updateOverviewMetrics();
-            renderDecisionHistory();
-            switchTab('decision-history');
+                closeConfirmModal();
+                closeShipmentModal();
+                state.pendingExecution = null;
+                alert('Decision submitted successfully! Waiting for Admin approval.');
+                await loadMyDecisions();
+                updateOverviewMetrics();
+                switchTab('decision-history');
+            } catch (error) {
+                console.error('Decision submission failed:', error);
+                alert('Decision submission failed: ' + error.message);
+            } finally {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.textContent = 'Confirm & Submit';
+                }
+            }
         }
 
         function handleTrackForm(event) {
@@ -685,29 +774,74 @@ window.addEventListener("pageshow", function (event) {
         function applyShipmentFilters() {
             renderShipmentsTable();
         }
+        
+        async function loadMyDecisions() {
+    try {
+        const result = await spApiRequest("/decisions/my");
+
+        state.decisionLogs = (result.decisions || []).map(d => ({
+            id: d.id,
+            timestamp: d.submitted_at,
+            po: d.shipment_id,
+            action: d.option_name,
+            cost: Number(d.cost) === 0
+                ? "$0"
+                : `+$${Number(d.cost).toLocaleString()}`,
+            savings: `$${Number(d.net_benefit).toLocaleString()}`,
+            rawCost: Number(d.cost),
+            rawSavings: Number(d.net_benefit),
+            status: d.status === "approved"
+                ? "Approved"
+                : d.status === "rejected"
+                    ? "Rejected"
+                    : "Pending Approval"
+        }));
+
+        renderDecisionHistory();
+
+    } catch (error) {
+        console.error("Unable to load decision history:", error);
+    }
+}
 
         function renderDecisionHistory() {
-            const tbody = document.getElementById('decisionHistoryTable');
-            if (!tbody) return;
+    const tbody = document.getElementById('decisionHistoryTable');
+    if (!tbody) return;
 
-            if (state.decisionLogs.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-slate-400 font-mono text-xs">No decisions recorded in log.</td></tr>`;
-                return;
-            }
+    if (state.decisionLogs.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="6" class="p-6 text-center text-slate-400 font-mono text-xs">
+                    No decisions recorded in log.
+                </td>
+            </tr>`;
+        return;
+    }
 
-            tbody.innerHTML = state.decisionLogs.map(log => `
-                <tr class="hover:bg-slate-50 transition-colors">
-                    <td class="py-3.5 px-4 font-mono text-slate-500">${log.timestamp}</td>
-                    <td class="py-3.5 px-4 font-bold text-slate-900">${log.po}</td>
-                    <td class="py-3.5 px-4 text-slate-800 font-medium">${log.action}</td>
-                    <td class="py-3.5 px-4 font-mono text-slate-600">${log.cost}</td>
-                    <td class="py-3.5 px-4 font-mono text-emerald-600 font-bold">${log.savings}</td>
-                    <td class="py-3.5 px-4">
-                        <span class="px-2.5 py-1 rounded bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-mono font-semibold">${log.status}</span>
-                    </td>
-                </tr>
-            `).join('');
-        }
+    tbody.innerHTML = state.decisionLogs.map(log => {
+        const statusClass =
+            log.status === "Approved"
+                ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                : log.status === "Rejected"
+                    ? "bg-red-50 text-red-700 border-red-200"
+                    : "bg-amber-50 text-amber-700 border-amber-200";
+
+        return `
+            <tr class="hover:bg-slate-50 transition-colors">
+                <td class="py-3.5 px-4 font-mono text-slate-500">${log.timestamp}</td>
+                <td class="py-3.5 px-4 font-bold text-slate-900">${log.po}</td>
+                <td class="py-3.5 px-4 text-slate-800 font-medium">${log.action}</td>
+                <td class="py-3.5 px-4 font-mono text-slate-600">${log.cost}</td>
+                <td class="py-3.5 px-4 font-mono text-emerald-600 font-bold">${log.savings}</td>
+                <td class="py-3.5 px-4">
+                    <span class="px-2.5 py-1 rounded border text-[10px] font-mono font-semibold ${statusClass}">
+                        ${log.status}
+                    </span>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
 
         function clearDecisionLog() {
             state.decisionLogs = [];
@@ -826,4 +960,5 @@ window.addEventListener("pageshow", function (event) {
             "Check whether the API is running at port 8000."
         );
     }
+    await loadMyDecisions();
 };
