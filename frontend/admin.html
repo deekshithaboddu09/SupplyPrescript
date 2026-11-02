@@ -234,14 +234,52 @@
     </div>
 </section>
 
-            <section id="audit" class="dashboard-section hidden">
-                <h2 class="text-2xl font-bold mb-3">Audit Logs</h2>
-                <div class="bg-white p-6 rounded-xl border border-slate-200">
-                    <p class="text-slate-500">
-                        Audit log viewing will be connected to the database in a later step.
-                    </p>
-                </div>
-            </section>
+           <section id="audit" class="dashboard-section hidden">
+    <div class="flex flex-wrap justify-between items-center gap-3 mb-6">
+        <div>
+            <h2 class="text-2xl font-bold text-slate-900">Audit Logs</h2>
+            <p class="text-sm text-slate-500 mt-1">
+                View recent activities performed on the platform.
+            </p>
+        </div>
+
+        <button onclick="loadAuditLogs()"
+            class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">
+            Refresh
+        </button>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+        <div class="p-5 border-b border-slate-200">
+            <h3 class="font-bold">Recent Activities</h3>
+            <p class="text-sm text-slate-500 mt-1">
+                Total displayed: <span id="auditCount">0</span>
+            </p>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm text-left">
+                <thead class="bg-slate-50 text-slate-600">
+                    <tr>
+                        <th class="p-4">ID</th>
+                        <th class="p-4">Admin</th>
+                        <th class="p-4">Action</th>
+                        <th class="p-4">Entity</th>
+                        <th class="p-4">Details</th>
+                        <th class="p-4">Date</th>
+                    </tr>
+                </thead>
+                <tbody id="auditTable">
+                    <tr>
+                        <td colspan="6" class="p-6 text-center text-slate-500">
+                            Click Audit Logs to load activities.
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
 
             <p id="pageMessage" class="text-sm mt-5"></p>
 
@@ -315,6 +353,7 @@ function showSection(sectionId, button) {
 
     if (sectionId === "users") loadPendingUsers();
     if (sectionId === "decisions") loadPendingDecisions();
+    if (sectionId === "audit") loadAuditLogs();
 }
 
 async function loadPendingUsers() {
@@ -546,7 +585,71 @@ async function reviewDecision(decisionId, action) {
         alert(error.message);
     }
 }
+async function loadAuditLogs() {
+    const table = document.getElementById("auditTable");
+    const count = document.getElementById("auditCount");
 
+    table.innerHTML = `
+        <tr>
+            <td colspan="6" class="p-6 text-center text-slate-500">
+                Loading audit logs...
+            </td>
+        </tr>`;
+
+    try {
+        const data = await apiRequest("/admin/audit-logs?limit=50");
+
+        count.textContent = data.count;
+        table.innerHTML = "";
+
+        if (!data.items || data.items.length === 0) {
+            table.innerHTML = `
+                <tr>
+                    <td colspan="6" class="p-6 text-center text-slate-500">
+                        No audit activities found.
+                    </td>
+                </tr>`;
+            return;
+        }
+
+        data.items.forEach(log => {
+            const row = document.createElement("tr");
+            row.className = "border-t border-slate-100";
+
+            const values = [
+                log.id,
+                log.actor_name || "System",
+                log.action,
+                `${log.entity_type} #${log.entity_id || "—"}`,
+                log.details || "—",
+                log.created_at
+            ];
+
+            values.forEach(value => {
+                const cell = document.createElement("td");
+                cell.className = "p-4 text-slate-700 whitespace-nowrap";
+                cell.textContent = value;
+                row.appendChild(cell);
+            });
+
+            table.appendChild(row);
+        });
+
+    } catch (error) {
+        count.textContent = "—";
+        table.innerHTML = "";
+
+        const row = document.createElement("tr");
+        const cell = document.createElement("td");
+
+        cell.colSpan = 6;
+        cell.className = "p-6 text-center text-red-600";
+        cell.textContent = error.message;
+
+        row.appendChild(cell);
+        table.appendChild(row);
+    }
+}
 // Load pending count after Admin page opens.
 loadPendingUsers();
 </script>
