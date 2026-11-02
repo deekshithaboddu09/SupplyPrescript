@@ -266,3 +266,37 @@ def reject_decision(
         "decision_id": decision_id,
         "status": "rejected",
     }
+@router.get("/audit-logs")
+def get_audit_logs(limit: int = 50):
+    """List recent Admin and system activities."""
+
+    if limit < 1 or limit > 200:
+        raise HTTPException(
+            status_code=400,
+            detail="Limit must be between 1 and 200",
+        )
+
+    with get_connection() as connection:
+        rows = connection.execute(
+            """
+            SELECT
+                a.id,
+                a.actor_user_id,
+                u.name AS actor_name,
+                a.action,
+                a.entity_type,
+                a.entity_id,
+                a.details,
+                a.created_at
+            FROM audit_logs a
+            LEFT JOIN users u ON a.actor_user_id = u.id
+            ORDER BY a.created_at DESC, a.id DESC
+            LIMIT ?
+            """,
+            (limit,),
+        ).fetchall()
+
+    return {
+        "count": len(rows),
+        "items": [dict(row) for row in rows],
+    }
