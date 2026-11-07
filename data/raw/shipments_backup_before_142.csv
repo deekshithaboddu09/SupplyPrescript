@@ -1,0 +1,6 @@
+id,product,origin,destination,supplier,status,delay_days,penalty
+SHP-4092,Microcontroller Chips,"Shanghai, CN","Rotterdam, NL",Semico Tech,CRITICAL,4,180000
+SHP-1044,Display Panels 12 inch,"Seoul, KR","Long Beach, US",Lumina Display,CRITICAL,3,95000
+SHP-7703,Power Supply Modules,"Taipei, TW","Frankfurt, DE",VoltDynamics,MODERATE,1.5,45000
+SHP-8921,Aluminum Enclosures,"Shenzhen, CN","Long Beach, US",PrecisionFab,NORMAL,0,0
+SHP-5532,Lithium Battery Cells,"Nagoya, JP","Hamburg, DE",EnergyTech Corp,NORMAL,0,0

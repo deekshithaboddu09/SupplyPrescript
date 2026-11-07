@@ -20,3 +20,9 @@ class DecisionResult(BaseModel):
     penalty_avoided: float
     net_benefit: float
     positive_roi: bool
+
+class DecisionSubmissionRequest(BaseModel):
+    shipment_id: str
+    penalty: float = Field(ge=0)
+    current_delay_days: float = Field(ge=0)
+    selected_option: DecisionOption
