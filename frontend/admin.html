@@ -243,10 +243,16 @@
             </p>
         </div>
 
-        <button onclick="loadAuditLogs()"
-            class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">
-            Refresh
-        </button>
+        <div class="flex items-center gap-3">
+    <span id="lastRefreshed" class="text-xs text-slate-500">
+        Not refreshed yet
+    </span>
+
+    <button onclick="loadAuditLogs()"
+        class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">
+        Refresh
+    </button>
+</div>
     </div>
 
     <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
@@ -475,7 +481,11 @@ async function loadPendingDecisions() {
         const data = await apiRequest("/admin/decisions/pending");
 
         count.textContent = data.count;
-        table.innerHTML = "";
+
+document.getElementById("lastRefreshed").textContent =
+    "Last refreshed: " + new Date().toLocaleString();
+
+table.innerHTML = "";
 
         if (!data.items || data.items.length === 0) {
             empty.classList.remove("hidden");
