@@ -56,3 +56,4 @@ This is an explainable baseline assumption for learning/demo use. It is not a tr
 ## Collaboration
 
 Work on assigned member branches, commit focused changes, push to origin, and open pull requests for review. Do not commit credentials or `.env` files.
+**Project Status:** Active Development 🚀
