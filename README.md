@@ -1,5 +1,6 @@
 # SupplyPrescript — Closed-Loop Prescriptive Analytics
 
+**Current Version:** v1.1
 A student-built demo for shipment risk monitoring and cost-aware decision recommendations. The frontend is based on the provided reference UI and has been separated into HTML, CSS, and JavaScript. A local FastAPI backend provides shipment endpoints and a transparent baseline decision-evaluation API.
 
 ## Project status
