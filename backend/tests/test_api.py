@@ -5,8 +5,14 @@ client = TestClient(app)
 
 def test_health():
     response = client.get("/health")
+
     assert response.status_code == 200
-    assert response.json()["status"] == "ok"
+
+    data = response.json()
+
+    assert data["status"] == "ok"
+    assert data["service"] == "SupplyPrescript API"
+    assert data["version"] == "0.1.0"
 
 def test_list_shipments():
     response = client.get("/api/shipments")
