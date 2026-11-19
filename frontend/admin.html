@@ -21,7 +21,7 @@
 <div class="flex min-h-screen">
 
     <!-- Sidebar -->
-    <aside class="w-64 bg-slate-900 text-white hidden md:flex flex-col">
+    <aside class="w-64 h-screen sticky top-0 shrink-0 bg-slate-900 text-white hidden md:flex flex-col">
         <div class="p-6 border-b border-slate-700">
             <div class="flex items-center gap-3">
                 <div class="bg-blue-600 rounded-lg p-2 font-bold text-xl">SP</div>
@@ -32,7 +32,7 @@
             </div>
         </div>
 
-        <nav class="p-4 space-y-2 flex-1">
+        <nav class="p-4 space-y-2 flex-1 overflow-y-auto">
             <button class="sidebar-link active w-full text-left px-4 py-3 rounded-lg"
                 onclick="showSection('overview', this)">
                 Overview
@@ -64,7 +64,7 @@
             </button>
         </nav>
 
-        <div class="p-4 border-t border-slate-700">
+        <div class="p-4 border-t border-slate-700 mt-auto shrink-0">
             <p id="sidebarAdmin" class="text-sm text-slate-300 mb-3">Admin</p>
             <button onclick="logout()"
                 class="w-full bg-red-600 hover:bg-red-700 py-2 rounded-lg text-sm font-semibold">
@@ -237,6 +237,111 @@
     </div>
 </section>
 
+        
+<!-- Shipment Management -->
+<section id="shipments" class="dashboard-section hidden">
+    <div class="flex flex-wrap justify-between items-center gap-3 mb-6">
+        <div>
+            <h2 class="text-2xl font-bold text-slate-900">Shipment Management</h2>
+            <p class="text-sm text-slate-500 mt-1">View and monitor all shipments.</p>
+        </div>
+        <button onclick="loadAdminShipments()"
+            class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">
+            Refresh
+        </button>
+    </div>
+
+    <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="p-5 border-b border-slate-200 flex flex-wrap gap-3">
+            <input id="adminShipmentSearch" type="text"
+                placeholder="Search shipment, product or supplier..."
+                oninput="renderAdminShipments()"
+                class="border border-slate-300 rounded-lg px-3 py-2 text-sm flex-1 min-w-48">
+
+            <select id="adminShipmentFilter" onchange="renderAdminShipments()"
+                class="border border-slate-300 rounded-lg px-3 py-2 text-sm">
+                <option value="ALL">All Statuses</option>
+                <option value="CRITICAL">Critical</option>
+                <option value="MODERATE">Moderate</option>
+                <option value="NORMAL">Normal</option>
+            </select>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm text-left">
+                <thead class="bg-slate-50 text-slate-600">
+                    <tr>
+                        <th class="p-4">Shipment ID</th>
+                        <th class="p-4">Product</th>
+                        <th class="p-4">Route</th>
+                        <th class="p-4">Supplier</th>
+                        <th class="p-4">Delay</th>
+                        <th class="p-4">Penalty</th>
+                        <th class="p-4">Status</th>
+                    </tr>
+                </thead>
+                <tbody id="adminShipmentsTable">
+                    <tr>
+                        <td colspan="7" class="p-6 text-center text-slate-500">
+                            Click Shipment Management to load shipments.
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+
+<!-- Analytics -->
+<section id="analytics" class="dashboard-section hidden">
+    <div class="flex justify-between items-center gap-3 mb-6">
+        <div>
+            <h2 class="text-2xl font-bold text-slate-900">Shipment Analytics</h2>
+            <p class="text-sm text-slate-500 mt-1">Overview of shipment performance and risk.</p>
+        </div>
+        <button onclick="loadAdminAnalytics()"
+            class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">
+            Refresh
+        </button>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-6">
+        <div class="bg-white rounded-xl p-6 border border-slate-200">
+            <p class="text-sm text-slate-500">Total Shipments</p>
+            <h3 id="analyticsTotal" class="text-3xl font-bold mt-2">—</h3>
+        </div>
+        <div class="bg-white rounded-xl p-6 border border-slate-200">
+            <p class="text-sm text-slate-500">Critical Shipments</p>
+            <h3 id="analyticsCritical" class="text-3xl font-bold text-rose-600 mt-2">—</h3>
+        </div>
+        <div class="bg-white rounded-xl p-6 border border-slate-200">
+            <p class="text-sm text-slate-500">Moderate Shipments</p>
+            <h3 id="analyticsModerate" class="text-3xl font-bold text-amber-600 mt-2">—</h3>
+        </div>
+        <div class="bg-white rounded-xl p-6 border border-slate-200">
+            <p class="text-sm text-slate-500">Delayed Shipment Exposure</p>
+            <h3 id="analyticsExposure" class="text-2xl font-bold text-rose-600 mt-2">—</h3>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-xl p-6 border border-slate-200">
+        <h3 class="font-bold text-lg mb-4">Shipment Status Breakdown</h3>
+        <div class="space-y-4 text-sm">
+            <div class="flex justify-between">
+                <span>Critical</span><strong id="analyticsCriticalBreakdown">—</strong>
+            </div>
+            <div class="flex justify-between">
+                <span>Moderate</span><strong id="analyticsModerateBreakdown">—</strong>
+            </div>
+            <div class="flex justify-between">
+                <span>Normal</span><strong id="analyticsNormal">—</strong>
+            </div>
+        </div>
+    </div>
+
+    <p id="analyticsMessage" class="text-sm mt-4 text-slate-500"></p>
+</section>
+
            <section id="audit" class="dashboard-section hidden">
     <div class="flex flex-wrap justify-between items-center gap-3 mb-6">
         <div>
@@ -362,6 +467,8 @@ function showSection(sectionId, button) {
 
     if (sectionId === "users") loadPendingUsers();
     if (sectionId === "decisions") loadPendingDecisions();
+    if (sectionId === "shipments") loadAuditLogs();
+    if (sectionId === "analytics") loadAdminAnalytics();
     if (sectionId === "audit") loadAuditLogs();
 }
 
@@ -598,6 +705,133 @@ async function reviewDecision(decisionId, action) {
         alert(error.message);
     }
 }
+
+let adminShipments = [];
+
+async function fetchAdminShipments() {
+    const data = await apiRequest("/shipments");
+    adminShipments = Array.isArray(data.items) ? data.items : [];
+    return adminShipments;
+}
+
+async function loadAdminShipments() {
+    const table = document.getElementById("adminShipmentsTable");
+
+    table.innerHTML = `
+        <tr><td colspan="7" class="p-6 text-center">Loading shipments...</td></tr>
+    `;
+
+    try {
+        await fetchAdminShipments();
+        renderAdminShipments();
+    } catch (error) {
+        table.innerHTML = "";
+        const row = document.createElement("tr");
+        const cell = document.createElement("td");
+        cell.colSpan = 7;
+        cell.className = "p-6 text-center text-red-600";
+        cell.textContent = error.message;
+        row.appendChild(cell);
+        table.appendChild(row);
+    }
+}
+
+function renderAdminShipments() {
+    const table = document.getElementById("adminShipmentsTable");
+    const search = (document.getElementById("adminShipmentSearch")?.value || "").toLowerCase();
+    const filter = document.getElementById("adminShipmentFilter")?.value || "ALL";
+
+    const filtered = adminShipments.filter(item => {
+        const status = (item.status || "NORMAL").toUpperCase();
+        const matchesStatus = filter === "ALL" || status === filter;
+
+        const searchable = [
+            item.id, item.product, item.origin,
+            item.destination, item.supplier
+        ].join(" ").toLowerCase();
+
+        return matchesStatus && searchable.includes(search);
+    });
+
+    table.innerHTML = "";
+
+    if (filtered.length === 0) {
+        table.innerHTML = `
+            <tr><td colspan="7" class="p-6 text-center text-slate-500">
+                No shipments found.
+            </td></tr>`;
+        return;
+    }
+
+    filtered.forEach(item => {
+        const row = document.createElement("tr");
+        row.className = "border-t border-slate-100";
+
+        const values = [
+            item.id || "—",
+            item.product || "—",
+            `${item.origin || "—"} → ${item.destination || "—"}`,
+            item.supplier || "—",
+            `${Number(item.delay_days) || 0} days`,
+            "$" + (Number(item.penalty) || 0).toLocaleString(),
+            item.status || "NORMAL"
+        ];
+
+        values.forEach((value, index) => {
+            const cell = document.createElement("td");
+            cell.className = "p-4 text-slate-700 whitespace-nowrap";
+            cell.textContent = value;
+
+            if (index === 6) {
+                cell.className += " font-semibold";
+            }
+
+            row.appendChild(cell);
+        });
+
+        table.appendChild(row);
+    });
+}
+
+async function loadAdminAnalytics() {
+    const message = document.getElementById("analyticsMessage");
+    message.textContent = "Loading analytics...";
+
+    try {
+        await fetchAdminShipments();
+
+        const critical = adminShipments.filter(
+            s => (s.status || "").toUpperCase() === "CRITICAL"
+        ).length;
+
+        const moderate = adminShipments.filter(
+            s => (s.status || "").toUpperCase() === "MODERATE"
+        ).length;
+
+        const normal = adminShipments.filter(
+            s => (s.status || "").toUpperCase() === "NORMAL"
+        ).length;
+
+        const exposure = adminShipments
+            .filter(s => ["CRITICAL", "MODERATE"].includes((s.status || "").toUpperCase()))
+            .reduce((sum, s) => sum + (Number(s.penalty) || 0), 0);
+
+        document.getElementById("analyticsTotal").textContent = adminShipments.length;
+        document.getElementById("analyticsCritical").textContent = critical;
+        document.getElementById("analyticsModerate").textContent = moderate;
+        document.getElementById("analyticsExposure").textContent =
+            "$" + exposure.toLocaleString();
+
+        document.getElementById("analyticsCriticalBreakdown").textContent = critical;
+        document.getElementById("analyticsModerateBreakdown").textContent = moderate;
+        document.getElementById("analyticsNormal").textContent = normal;
+
+        message.textContent = "Analytics updated successfully.";
+    } catch (error) {
+        message.textContent = "Unable to load analytics: " + error.message;
+    }
+}
+
 async function loadAuditLogs() {
     const table = document.getElementById("auditTable");
     const count = document.getElementById("auditCount");
