@@ -494,7 +494,7 @@
                 <div class="flex items-center gap-3 w-full sm:w-auto">
                     <div class="relative flex-1 sm:w-64">
                         <i data-lucide="search" class="w-4 h-4 absolute left-3 top-2.5 text-slate-400"></i>
-                        <input type="text" id="shipmentSearchInput" onkeyup="applyShipmentFilters()" placeholder="Search shipment, origin, supplier..." class="w-full bg-white border border-slate-300 rounded-xl py-2 pl-9 pr-3 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent">
+                        <input type="text" id="shipmentSearchInput" aria-label="Search shipments by name, origin, or supplier" onkeyup="applyShipmentFilters()" onkeyup="applyShipmentFilters()" placeholder="Search shipment, origin, supplier..." class="w-full bg-white border border-slate-300 rounded-xl py-2 pl-9 pr-3 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent">
                     </div>
                     <select id="filterRisk" aria-label="Filter shipments by risk level" onchange="applyShipmentFilters()" class="bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-700 font-medium focus:outline-none focus:ring-2 focus:ring-blue-600">
                         <option value="ALL">All Risk Levels</option>
